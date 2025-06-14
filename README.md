@@ -1,34 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>YouthConnect App - Download</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; text-align: center; }
-    .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px #ccc; max-width: 500px; margin: auto; }
-    img { width: 120px; border-radius: 15px; }
-    h1 { color: #333; }
-    p { color: #555; }
-    a.download { display: inline-block; padding: 12px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; margin-top: 20px; }
-    a.download:hover { background: #0056b3; }
-    small { color: #777; display: block; margin-top: 20px; }
-  </style>
-</head>
-<body>
+import 'package:flutter/material.dart'; import 'package:firebase_core/firebase_core.dart'; import 'package:cloud_firestore/cloud_firestore.dart'; import 'package:firebase_auth/firebase_auth.dart';
 
-  <div class="container">
-    <img src="logo.png" alt="App Logo">
-    <h1>YouthConnect App</h1>
-    <p><strong>Version:</strong> 1.0.0<br><strong>Size:</strong> 15MB</p>
-    <p>Stay connected with friends, chat, video call, share posts — all in one app!</p>
+void main() async { WidgetsFlutterBinding.ensureInitialized(); await Firebase.initializeApp(); runApp(YouthConnectApp()); }
 
-    <a href="app-release.apk" class="download">Download APK</a>
+class YouthConnectApp extends StatelessWidget { @override Widget build(BuildContext context) { return MaterialApp( title: 'YouthConnect', theme: ThemeData( primarySwatch: Colors.blue, ), home: AuthGate(), ); } }
 
-    <p>📥 After downloading, enable "Install from Unknown Sources" in your phone settings.</p>
+class AuthGate extends StatelessWidget { @override Widget build(BuildContext context) { return StreamBuilder<User?>( stream: FirebaseAuth.instance.authStateChanges(), builder: (context, snapshot) { if (snapshot.connectionState == ConnectionState.active) { User? user = snapshot.data; if (user == null) { return LoginPage(); } else { return HomePage(); } } return Scaffold( body: Center(child: CircularProgressIndicator()), ); }, ); } }
 
-    <small>Contact us: dmoleelebbtcg@gmail.com</small>
-  </div>
+class LoginPage extends StatelessWidget { final emailController = TextEditingController(); final passwordController = TextEditingController();
 
-</body>
-</html>
+@override Widget build(BuildContext context) { return Scaffold( appBar: AppBar(title: Text("Login")), body: Padding( padding: const EdgeInsets.all(16.0), child: Column( children: [ TextField(controller: emailController, decoration: InputDecoration(labelText: 'Email')), TextField(controller: passwordController, decoration: InputDecoration(labelText: 'Password'), obscureText: true), ElevatedButton( onPressed: () async { await FirebaseAuth.instance.signInWithEmailAndPassword( email: emailController.text, password: passwordController.text, ); }, child: Text("Login"), ), ], ), ), ); } }
+
+class HomePage extends StatelessWidget { final postController = TextEditingController();
+
+@override Widget build(BuildContext context) { return Scaffold( appBar: AppBar( title: Text("YouthConnect Home"), actions: [ IconButton( icon: Icon(Icons.logout), onPressed: () => FirebaseAuth.instance.signOut(), ) ], ), body: Column( children: [ Padding( padding: const EdgeInsets.all(8.0), child: TextField( controller: postController, decoration: InputDecoration( labelText: 'What's on your mind?', ), ), ), ElevatedButton( onPressed: () { FirebaseFirestore.instance.collection('posts').add({ 'text': postController.text, 'timestamp': FieldValue.serverTimestamp(), }); postController.clear(); }, child: Text("Post"), ), Expanded( child: StreamBuilder<QuerySnapshot>( stream: FirebaseFirestore.instance.collection('posts').orderBy('timestamp', descending: true).snapshots(), builder: (context, snapshot) { if (!snapshot.hasData) return Center(child: CircularProgressIndicator()); final docs = snapshot.data!.docs; return ListView.builder( itemCount: docs.length, itemBuilder: (context, index) { return ListTile( title: Text(docs[index]['text'] ?? 'No Content'), ); }, ); }, ), ), ], ), ); } }
+import 'package:flutter/material.dart'; import 'package:firebase_core/firebase_core.dart'; import 'package:cloud_firestore/cloud_firestore.dart'; import 'package:firebase_auth/firebase_auth.dart';
+
+void main() async { WidgetsFlutterBinding.ensureInitialized(); await Firebase.initializeApp(); runApp(YouthConnectApp()); }
+
+class YouthConnectApp extends StatelessWidget { @override Widget build(BuildContext context) { return MaterialApp( title: 'YouthConnect', theme: ThemeData( primarySwatch: Colors.blue, ), home: AuthGate(), ); } }
+
+class AuthGate extends StatelessWidget { @override Widget build(BuildContext context) { return StreamBuilder<User?>( stream: FirebaseAuth.instance.authStateChanges(), builder: (context, snapshot) { if (snapshot.connectionState == ConnectionState.active) { User? user = snapshot.data; if (user == null) { return LoginPage(); } else { return HomePage(); } } return Scaffold( body: Center(child: CircularProgressIndicator()), ); }, ); } }
+
+class LoginPage extends StatelessWidget { final emailController = TextEditingController(); final passwordController = TextEditingController();
+
+@override Widget build(BuildContext context) { return Scaffold( appBar: AppBar(title: Text("Login")), body: Padding( padding: const EdgeInsets.all(16.0), child: Column( children: [ TextField(controller: emailController, decoration: InputDecoration(labelText: 'Email')), TextField(controller: passwordController, decoration: InputDecoration(labelText: 'Password'), obscureText: true), ElevatedButton( onPressed: () async { await FirebaseAuth.instance.signInWithEmailAndPassword( email: emailController.text, password: passwordController.text, ); }, child: Text("Login"), ), ], ), ), ); } }
+
+class HomePage extends StatelessWidget { final postController = TextEditingController();
+
+@override Widget build(BuildContext context) { return Scaffold( appBar: AppBar( title: Text("YouthConnect Home"), actions: [ IconButton( icon: Icon(Icons.logout), onPressed: () => FirebaseAuth.instance.signOut(), ) ], ), body: Column( children: [ Padding( padding: const EdgeInsets.all(8.0), child: TextField( controller: postController, decoration: InputDecoration( labelText: 'What's on your mind?', ), ), ), ElevatedButton( onPressed: () { FirebaseFirestore.instance.collection('posts').add({ 'text': postController.text, 'timestamp': FieldValue.serverTimestamp(), }); postController.clear(); }, child: Text("Post"), ), Expanded( child: StreamBuilder<QuerySnapshot>( stream: FirebaseFirestore.instance.collection('posts').orderBy('timestamp', descending: true).snapshots(), builder: (context, snapshot) { if (!snapshot.hasData) return Center(child: CircularProgressIndicator()); final docs = snapshot.data!.docs; return ListView.builder( itemCount: docs.length, itemBuilder: (context, index) { return ListTile( title: Text(docs[index]['text'] ?? 'No Content'), ); }, ); }, ), ), ], ), ); } }
+
+
